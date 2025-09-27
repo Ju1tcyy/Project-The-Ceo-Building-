@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>The Ceo Building</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <div class="container">
+    <div class="header">
+      <img src="Logo-removebg-preview.png" alt="Logo" class="logo">
+      <h2>The Ceo Building</h2>
+    </div>
+    
+    <!-- Navigation Tabs -->
+    <div class="tabs">
+      <button class="tab-button active" onclick="showTab('send-message')">Kirim Pesan</button>
+      <button class="tab-button" onclick="showTab('manage-tenants')">Kelola Tenant</button>
+    </div>
+    
+    <!-- Send Message Tab -->
+    <div id="send-message" class="tab-content active">
+      <h3>Kirim Pesan WhatsApp</h3>
+      <form id="tenantForm">
+        <label for="lantai">Lantai:</label>
+        <select id="lantai">
+          <option value="">-- Pilih Lantai --</option>
+        </select>
+        
+        <label for="tenantSelect">Tenant:</label>
+        <select id="tenantSelect">
+          <option value="">-- Pilih Tenant --</option>
+        </select>
+        
+        
+        <label for="fileInput">Upload File (Opsional):</label>
+        <input type="file" id="fileInput" name="file" accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt" />
+        
+        <button type="submit" id="submitBtn">Kirim Pesan</button>
+      </form>
+    </div>
+    
+    <!-- Manage Tenants Tab -->
+    <div id="manage-tenants" class="tab-content">
+      <h3>Kelola Data Tenant</h3>
+      
+      <!-- Add Tenant Form -->
+      <div class="add-tenant-form">
+        <h4>Tambah Tenant Baru</h4>
+        <form id="addTenantForm">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="newFloor">Lantai:</label>
+              <input type="number" id="newFloor" min="1" max="50" required>
+            </div>
+            <div class="form-group">
+              <label for="newTenantName">Nama Tenant:</label>
+              <input type="text" id="newTenantName" required>
+            </div>
+            <div class="form-group">
+              <label for="newPhoneNumber">Nomor WhatsApp:</label>
+              <input type="text" id="newPhoneNumber" placeholder="628xxxxxxxxx" required>
+            </div>
+            <div class="form-group">
+              <button type="submit" class="btn-add">Tambah Tenant</button>
+            </div>
+          </div>
+        </form>
+      </div>
+      
+      <!-- Tenant List -->
+      <div class="tenant-list">
+        <h4>Daftar Tenant</h4>
+        <div id="tenantList"></div>
+      </div>
+    </div>
+    
+    <div id="status"></div>
+  </div>
+  
+  <!-- Edit Tenant Modal -->
+  <div id="editModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeEditModal()">&times;</span>
+      <h3>Edit Tenant</h3>
+      <form id="editTenantForm">
+        <input type="hidden" id="editFloor">
+        <input type="hidden" id="editOldName">
+        
+        <label for="editTenantName">Nama Tenant:</label>
+        <input type="text" id="editTenantName" required>
+        
+        <label for="editPhoneNumber">Nomor WhatsApp:</label>
+        <input type="text" id="editPhoneNumber" required>
+        
+        <div class="modal-actions">
+          <button type="button" onclick="closeEditModal()" class="btn-cancel">Batal</button>
+          <button type="submit" class="btn-save">Simpan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+  <script src="script.js"></script>
+</body>
+</html>

@@ -294,7 +294,22 @@ const bodyParser = require('body-parser');
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');
 const app = express();
-app.use(bodyParser.json());
+
+// Enable CORS for all routes
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+    
+    if (req.method === 'OPTIONS') {
+        res.sendStatus(200);
+    } else {
+        next();
+    }
+});
+
+app.use(bodyParser.json({ limit: '50mb' })); // Increase limit for file uploads
+app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
 
 // Definisi manual untuk Swagger spec
 const swaggerDefinition = {
@@ -499,7 +514,10 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDefinition));
 
 // Route untuk mengirim pesan
 app.post('/send-message', async (req, res) => {
+    console.log('Received request:', JSON.stringify(req.body, null, 2));
+    
     if (!waziumBotInstance) {
+        console.log('Bot instance not ready');
         return res.status(503).json({
             error: 'Bot belum siap',
             message: 'WhatsApp bot sedang dalam proses koneksi. Silakan tunggu beberapa saat.'
@@ -510,6 +528,7 @@ app.post('/send-message', async (req, res) => {
 
     // Validasi input
     if (!to || !message) {
+        console.log('Missing required parameters:', { to, message });
         return res.status(400).json({
             error: 'Parameter "to" dan "message" wajib diisi',
             example: {
@@ -521,6 +540,7 @@ app.post('/send-message', async (req, res) => {
 
     // Validasi format JID WhatsApp
     if (!to.includes('@s.whatsapp.net') && !to.includes('@g.us')) {
+        console.log('Invalid JID format:', to);
         return res.status(400).json({
             error: 'Format nomor WhatsApp tidak valid',
             message: 'Gunakan format: 628123456789@s.whatsapp.net untuk chat pribadi atau groupid@g.us untuk grup'
@@ -528,7 +548,48 @@ app.post('/send-message', async (req, res) => {
     }
 
     try {
-        const result = await waziumBotInstance.sendMessage(to, message);
+        // Handle different message types
+        let processedMessage = message;
+        
+        console.log('Processing message type:', Object.keys(message));
+        
+        // If message contains base64 data URL, convert it to buffer
+        if (message.image && message.image.url && message.image.url.startsWith('data:')) {
+            console.log('Processing image message');
+            const base64Data = message.image.url.split(',')[1];
+            const buffer = Buffer.from(base64Data, 'base64');
+            processedMessage.image = buffer;
+            delete processedMessage.image.url;
+        }
+        
+        if (message.video && message.video.url && message.video.url.startsWith('data:')) {
+            console.log('Processing video message');
+            const base64Data = message.video.url.split(',')[1];
+            const buffer = Buffer.from(base64Data, 'base64');
+            processedMessage.video = buffer;
+            delete processedMessage.video.url;
+        }
+        
+        if (message.audio && message.audio.url && message.audio.url.startsWith('data:')) {
+            console.log('Processing audio message');
+            const base64Data = message.audio.url.split(',')[1];
+            const buffer = Buffer.from(base64Data, 'base64');
+            processedMessage.audio = buffer;
+            delete processedMessage.audio.url;
+        }
+        
+        if (message.document && message.document.url && message.document.url.startsWith('data:')) {
+            console.log('Processing document message');
+            const base64Data = message.document.url.split(',')[1];
+            const buffer = Buffer.from(base64Data, 'base64');
+            processedMessage.document = buffer;
+            delete processedMessage.document.url;
+        }
+
+        console.log('Sending message to:', to);
+        const result = await waziumBotInstance.sendMessage(to, processedMessage);
+        console.log('Message sent successfully:', result.key.id);
+        
         res.json({
             success: true,
             message: 'Pesan berhasil dikirim',
@@ -582,8 +643,8 @@ app.get('/health', (req, res) => {
     });
 });
 
-// Route untuk halaman utama
-app.get('/', (req, res) => {
+// Route untuk API info (moved to /api/info)
+app.get('/api/info', (req, res) => {
     res.json({
         message: 'Wazium WhatsApp API Server',
         version: '1.0.0',
@@ -592,7 +653,9 @@ app.get('/', (req, res) => {
             'POST /send-message': 'Kirim pesan WhatsApp',
             'GET /bot-status': 'Status bot WhatsApp',
             'GET /health': 'Health check',
-            'GET /api-docs': 'Dokumentasi API'
+            'GET /api-docs': 'Dokumentasi API',
+            'GET /api/tenants': 'Get all tenants',
+            'PUT /api/tenants': 'Update tenants data'
         }
     });
 });
@@ -602,6 +665,76 @@ app.get('/webhooks', (req, res) => {
     res.json({
         webhooks
     });
+});
+
+// Serve static files
+app.use(express.static('.'));
+
+// Tenant CRUD API endpoints
+const fs = require('fs');
+const path = require('path');
+
+const tenantsFilePath = path.join(__dirname, '../data/tenants.json');
+
+// Ensure data directory exists
+const dataDir = path.dirname(tenantsFilePath);
+if (!fs.existsSync(dataDir)) {
+    fs.mkdirSync(dataDir, { recursive: true });
+}
+
+// Initialize tenants file if it doesn't exist
+if (!fs.existsSync(tenantsFilePath)) {
+    const initialData = {
+        tenants: {
+            "1": { "MANAGEMENT BUILDING": "6285890392419" },
+            "2": { "PT SPM": "6285890392419", "PT DYAFERA": "6285890392419", "PT BOER": "6285890392419", "PT DQS": "6285890392419" },
+            "3": { "SIBARANI & CO": "6285890392419", "PT WALASUJI PADMARRIN": "6285890392419", "PT DUMA NUSATAMA": "6285890392419" },
+            "5": { "JALIN KOMUNIKASI INDONESIA": "6285890392419", "PRIMA ROBERTUS DAN REKAN": "6285890392419" },
+            "6": { "PT SINERGI MULTI ADI SOLUSI": "6285890392419", "PT NUSA GROUP": "6282140009711" },
+            "7": { "PT. RIG": "6285890392419" },
+            "8": { "PT HARNER": "6285890392419" },
+            "9": { "PT MULTINDO TECHNOLOGY UTAMA": "628212223456" },
+            "10": { "PT TIGAPILAR": "6285890392419", "PT LIPPING MINING": "6285890392419", "PT TRISINO TEKNIK SOLUSINDO": "6285890392419" },
+            "11": { "PT DWIWARNA SENTOSA RIA": "6285890392419" },
+            "12": { "PT VOFFICE": "6285890392419" },
+            "15": { "PT JARVIS INTEGRASI SOLUSI": "6285890392419", "PT MAHAKARYA GEMILANG HODI": "6285890392419" }
+        }
+    };
+    fs.writeFileSync(tenantsFilePath, JSON.stringify(initialData, null, 2));
+}
+
+// GET /api/tenants - Get all tenants
+app.get('/api/tenants', (req, res) => {
+    try {
+        const data = fs.readFileSync(tenantsFilePath, 'utf8');
+        const tenants = JSON.parse(data);
+        res.json(tenants);
+    } catch (error) {
+        console.error('Error reading tenants file:', error);
+        res.status(500).json({ error: 'Failed to read tenants data' });
+    }
+});
+
+// PUT /api/tenants - Update all tenants
+app.put('/api/tenants', (req, res) => {
+    try {
+        const { tenants } = req.body;
+        if (!tenants) {
+            return res.status(400).json({ error: 'Tenants data is required' });
+        }
+        
+        const data = { tenants };
+        fs.writeFileSync(tenantsFilePath, JSON.stringify(data, null, 2));
+        res.json({ success: true, message: 'Tenants data updated successfully' });
+    } catch (error) {
+        console.error('Error writing tenants file:', error);
+        res.status(500).json({ error: 'Failed to save tenants data' });
+    }
+});
+
+// Route untuk halaman utama - serve index.html
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, '../index.html'));
 });
 
 if (require.main === module) {

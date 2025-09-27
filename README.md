@@ -1,99 +1,129 @@
-# Wazium WhatsApp Bot
+# Tenant Management WhatsApp Integration
 
-![Logo](assets/images/wazium.png)
+Sistem integrasi untuk mengirim pesan dan file melalui WhatsApp menggunakan WaziumBot.
 
-Wazium adalah WhatsApp Bot berbasis Node.js yang mudah dikembangkan, dengan fitur modular, auto-reload, dan siap digunakan untuk kebutuhan personal maupun komunitas.
+## Fitur
 
-## Fitur Utama
-- Sistem perintah modular (mudah menambah/mengedit command)
-- Hot-reload (perubahan file command & fungsi langsung aktif tanpa restart)
-- Mendukung berbagai jenis pesan: teks, lokasi, kontak, polling, event, produk, tombol, list, kartu, dsb
-- Logging perintah dengan tampilan tabel di konsol
-- Konfigurasi global mudah diubah
-- Dukungan pairing code login WhatsApp Web
+- ✅ Mengirim pesan teks ke tenant berdasarkan lantai
+- ✅ Mengirim file (gambar, video, audio, dokumen) ke tenant
+- ✅ Interface web yang user-friendly
+- ✅ Integrasi dengan WaziumBot WhatsApp API
+- ✅ Validasi input dan error handling
+- ✅ Status feedback real-time
 
-## Instalasi
-1. **Clone repository**
-   ```bash
-   git clone <repo-ini>
-   cd wazium
-   ```
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
-3. **Konfigurasi**
-   - Edit file `config.js` untuk mengubah nama bot, owner, dsb.
-   - Siapkan file `.env` jika ingin menggunakan variabel lingkungan (misal: `BOTNUMBER`, `WEBHOOKS`).
+## Struktur Proyek
 
-4. **Jalankan Bot**
-   ```bash
-   npm start
-   ```
-   Atau langsung:
-   ```bash
-   node index.js
-   ```
+```
+ProjectWeb/
+├── index.html          # Interface web utama
+├── script.js           # JavaScript untuk handling form dan API calls
+├── style.css           # Styling untuk interface
+├── WaziumBot/          # WhatsApp Bot backend
+│   ├── service/
+│   │   └── wazium.js   # API server dengan endpoint /send-message
+│   └── ...
+└── README.md           # Dokumentasi ini
+```
 
-## Penggunaan
-- Prefix default: `.` (titik)
-- Contoh perintah:
-  - `.help` — Menampilkan daftar perintah
-  - `.text` — Balas "Hello World"
-  - `.ping` — Cek response time bot
-  - `.info` — Info chat & user
+## Cara Penggunaan
 
-## Menambah/Mengedit Command
-- Semua perintah di-handle di `commandHandler.js`.
-- Tambahkan case baru pada switch-case di fungsi `handleCommand`.
-- Contoh:
-  ```js
-  case 'halo':
-    await WaziumBot.sendText(from, 'Halo juga!')
-    break;
-  ```
+### 1. Menjalankan WaziumBot
 
-## Struktur Folder
-- `index.js` — Entry point, auto-restart jika error
-- `service/wazium.js` — Main logic WhatsApp bot
-- `lib/` — Berisi fungsi, handler, loader, dsb
-- `commandHandler.js` — Handler utama semua command
-- `config.js` — Konfigurasi global bot
-- `assets/images/` — Logo bot
-- `session/` — Data session WhatsApp
+```bash
+cd WaziumBot
+npm install
+npm start
+```
 
-## Konfigurasi Penting
-Edit di `config.js`:
-- `global.botname` — Nama bot
-- `global.ownernumber` — Nomor owner (format internasional)
-- `global.ownername` — Nama owner
-- `global.xprefix` — Prefix command
-- `global.thumb` — Path logo bot
+Bot akan berjalan di `http://localhost:3000`
 
-## Kontribusi
-Pull request & issue sangat diterima! Silakan fork, modifikasi, dan ajukan PR.
+### 2. Membuka Interface Web
+
+Buka file `index.html` di browser atau serve menggunakan web server lokal.
+
+### 3. Mengirim Pesan
+
+1. **Pilih Lantai**: Pilih lantai dari dropdown
+2. **Pilih Tenant**: Pilih tenant yang akan menerima pesan
+3. **Masukkan Pesan**: Ketik pesan yang akan dikirim (opsional jika mengirim file)
+4. **Upload File** (opsional): Pilih file yang akan dikirim
+5. **Kirim**: Klik tombol "Kirim Pesan"
+
+## Jenis File yang Didukung
+
+- **Gambar**: JPG, PNG, GIF, WebP
+- **Video**: MP4, AVI, MOV, WebM
+- **Audio**: MP3, WAV, OGG, M4A
+- **Dokumen**: PDF, DOC, DOCX, TXT
+
+## API Endpoints
+
+### POST /send-message
+
+Mengirim pesan atau file ke WhatsApp.
+
+**Request Body:**
+```json
+{
+  "to": "628123456789@s.whatsapp.net",
+  "message": {
+    "text": "Pesan teks"
+  }
+}
+```
+
+**Atau untuk file:**
+```json
+{
+  "to": "628123456789@s.whatsapp.net",
+  "message": {
+    "image": { "url": "data:image/jpeg;base64,..." },
+    "caption": "Caption untuk gambar"
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Pesan berhasil dikirim",
+  "messageId": "message_id"
+}
+```
+
+## Konfigurasi Tenant
+
+Data tenant dapat diubah di file `script.js` pada bagian `tenantData`:
+
+```javascript
+const tenantData = {
+    1: { "MANAGEMENT BUILDING": "6285890392419" },
+    2: { "PT SPM": "6285890392419", "PT DYAFERA": "6285890392419" },
+    // ... dst
+};
+```
+
+## Troubleshooting
+
+### Bot belum siap
+- Pastikan WaziumBot sudah terhubung ke WhatsApp
+- Cek status di `http://localhost:3000/bot-status`
+
+### Gagal mengirim file
+- Pastikan file tidak terlalu besar (max ~16MB untuk WhatsApp)
+- Cek format file yang didukung
+
+### Error koneksi
+- Pastikan WaziumBot berjalan di port 3000
+- Cek firewall dan network settings
+
+## Dependencies
+
+- **Frontend**: Vanilla JavaScript, HTML5, CSS3
+- **Backend**: Node.js, Express.js, WaziumBot (Baileys)
+- **WhatsApp**: WhatsApp Web API via Baileys
 
 ## Lisensi
-MIT License
 
-Copyright (c) 2025 lrnd.__
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-> Dibuat oleh [LRNDWY](https://github.com/lrndwyy) — Instagram: [@lrnd.__](https://instagram.com/lrnd.__)
+Proyek ini menggunakan lisensi yang sama dengan WaziumBot.

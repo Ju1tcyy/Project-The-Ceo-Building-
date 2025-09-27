@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  wazium-bot:
+    build: .
+    container_name: wazium-bot
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      # Add your environment variables here
+      # - BOTNUMBER=628xxxxxxxxx
+      # - WEBHOOKS=https://your-webhook-url.com/webhook
+    volumes:
+      # Persist session data
+      - ./session:/app/session
+      # Persist tenant data
+      - ./data:/app/data
+      # Optional: persist logs
+      - ./logs:/app/logs
+    networks:
+      - wazium-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  wazium-network:
+    driver: bridge
+
+volumes:
+  session-data:
+  tenant-data:
+  logs-data:
