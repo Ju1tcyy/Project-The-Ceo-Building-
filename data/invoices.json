@@ -1,0 +1,320 @@
+{
+  "invoices": [
+    {
+      "id": "INV-1763693072100-chhthvj1i",
+      "phoneNumber": "6282140009711",
+      "tenantName": "PT BOER",
+      "floor": "2",
+      "sentAt": "2025-11-21T02:44:32.100Z",
+      "dueDate": "2025-11-23",
+      "paid": false,
+      "reminder1Sent": false,
+      "reminder2Sent": false,
+      "reminder3Sent": false,
+      "files": [
+        {
+          "name": "invoice.pdf",
+          "type": "application/pdf"
+        }
+      ],
+      "driveFiles": [
+        {
+          "fileName": "invoice.pdf",
+          "driveLink": "https://drive.google.com/file/d/1b3eDPJ_xJj7pZBAmewk0QI2ifGiMb9M8/view?usp=drivesdk",
+          "driveId": "1b3eDPJ_xJj7pZBAmewk0QI2ifGiMb9M8"
+        }
+      ],
+      "pollMessageId": null
+    },
+    {
+      "id": "INV-1763717540894-zkhs82f0j",
+      "phoneNumber": "6282140009711",
+      "tenantName": "PT BOER",
+      "floor": "2",
+      "sentAt": "2025-11-21T09:32:20.894Z",
+      "dueDate": "2025-11-21",
+      "paid": false,
+      "reminder1Sent": false,
+      "reminder2Sent": false,
+      "reminder3Sent": false,
+      "files": [
+        {
+          "name": "WhatsApp Image 2025-11-15 at 14.21.46.jpeg",
+          "type": "image/jpeg"
+        },
+        {
+          "name": "WhatsApp Image 2025-11-15 at 10.50.32.jpeg",
+          "type": "image/jpeg"
+        }
+      ],
+      "driveFiles": [
+        {
+          "fileName": "WhatsApp Image 2025-11-15 at 14.21.46.jpeg",
+          "driveLink": "https://drive.google.com/file/d/1tq9OM_acpO6dy5KbObxvGfvBT6i0HuUd/view?usp=drivesdk",
+          "driveId": "1tq9OM_acpO6dy5KbObxvGfvBT6i0HuUd"
+        },
+        {
+          "fileName": "WhatsApp Image 2025-11-15 at 10.50.32.jpeg",
+          "driveLink": "https://drive.google.com/file/d/1xuFIaAk3oqqgvmjggde152yvFwKBrSmQ/view?usp=drivesdk",
+          "driveId": "1xuFIaAk3oqqgvmjggde152yvFwKBrSmQ"
+        }
+      ],
+      "pollMessageId": null
+    },
+    {
+      "id": "INV-1763717983275-6k6v4q6xd",
+      "phoneNumber": "6282140009711",
+      "tenantName": "PT BOER",
+      "floor": "2",
+      "sentAt": "2025-11-21T09:39:43.275Z",
+      "dueDate": "2025-11-21",
+      "paid": false,
+      "reminder1Sent": false,
+      "reminder2Sent": false,
+      "reminder3Sent": false,
+      "files": [
+        {
+          "name": "WhatsApp Image 2025-11-15 at 14.21.46.jpeg",
+          "type": "image/jpeg"
+        },
+        {
+          "name": "WhatsApp Image 2025-11-15 at 10.50.32.jpeg",
+          "type": "image/jpeg"
+        }
+      ],
+      "driveFiles": [
+        {
+          "fileName": "WhatsApp Image 2025-11-15 at 14.21.46.jpeg",
+          "driveLink": "https://drive.google.com/file/d/1_TKnwilkjgXPxzvHksjGxN_hP_W3nWHv/view?usp=drivesdk",
+          "driveId": "1_TKnwilkjgXPxzvHksjGxN_hP_W3nWHv"
+        },
+        {
+          "fileName": "WhatsApp Image 2025-11-15 at 10.50.32.jpeg",
+          "driveLink": "https://drive.google.com/file/d/1PZSN-9e7dfNLKIB_T8YuwYVNWZ7oE33g/view?usp=drivesdk",
+          "driveId": "1PZSN-9e7dfNLKIB_T8YuwYVNWZ7oE33g"
+        }
+      ],
+      "pollMessageId": null
+    },
+    {
+      "id": "INV-1763718431482-7f4n6k88o",
+      "phoneNumber": "6282140009711",
+      "tenantName": "PT BOER",
+      "floor": "2",
+      "sentAt": "2025-11-21T09:47:11.482Z",
+      "dueDate": "2025-11-21",
+      "paid": false,
+      "reminder1Sent": false,
+      "reminder2Sent": false,
+      "reminder3Sent": false,
+      "files": [
+        {
+          "name": "WhatsApp Image 2025-11-15 at 14.21.46.jpeg",
+          "type": "image/jpeg"
+        },
+        {
+          "name": "WhatsApp Image 2025-11-15 at 10.50.32.jpeg",
+          "type": "image/jpeg"
+        },
+        {
+          "name": "WhatsApp Image 2025-11-14 at 18.25.24.jpeg",
+          "type": "image/jpeg"
+        }
+      ],
+      "driveFiles": [
+        {
+          "fileName": "WhatsApp Image 2025-11-15 at 14.21.46.jpeg",
+          "driveLink": "https://drive.google.com/file/d/1Q-V2BdafR7n_lS0wIhGl_4HzHAt2GCMz/view?usp=drivesdk",
+          "driveId": "1Q-V2BdafR7n_lS0wIhGl_4HzHAt2GCMz"
+        },
+        {
+          "fileName": "WhatsApp Image 2025-11-15 at 10.50.32.jpeg",
+          "driveLink": "https://drive.google.com/file/d/1wM1okvU2fZttkKTL2Qnw2kEbdWirMIOC/view?usp=drivesdk",
+          "driveId": "1wM1okvU2fZttkKTL2Qnw2kEbdWirMIOC"
+        },
+        {
+          "fileName": "WhatsApp Image 2025-11-14 at 18.25.24.jpeg",
+          "driveLink": "https://drive.google.com/file/d/13aaOwD1fLzpAmFSRESZ_cqlVWcEfeLmJ/view?usp=drivesdk",
+          "driveId": "13aaOwD1fLzpAmFSRESZ_cqlVWcEfeLmJ"
+        }
+      ],
+      "pollMessageId": null
+    },
+    {
+      "id": "INV-1763718692677-52cqgpg1s",
+      "phoneNumber": "6282140009711",
+      "tenantName": "PT BOER",
+      "floor": "2",
+      "sentAt": "2025-11-21T09:51:32.677Z",
+      "dueDate": "2025-11-21",
+      "paid": false,
+      "reminder1Sent": false,
+      "reminder2Sent": false,
+      "reminder3Sent": false,
+      "files": [
+        {
+          "name": "WhatsApp Image 2025-11-15 at 10.50.32.jpeg",
+          "type": "image/jpeg"
+        },
+        {
+          "name": "WhatsApp Image 2025-11-14 at 18.25.24.jpeg",
+          "type": "image/jpeg"
+        },
+        {
+          "name": "WhatsApp Image 2025-11-14 at 09.09.58.jpeg",
+          "type": "image/jpeg"
+        }
+      ],
+      "driveFiles": [
+        {
+          "fileName": "WhatsApp Image 2025-11-15 at 10.50.32.jpeg",
+          "driveLink": "https://drive.google.com/file/d/1jR8QgFDs48Od4JMpq_lgcsQ1Sk3xLwh3/view?usp=drivesdk",
+          "driveId": "1jR8QgFDs48Od4JMpq_lgcsQ1Sk3xLwh3"
+        },
+        {
+          "fileName": "WhatsApp Image 2025-11-14 at 18.25.24.jpeg",
+          "driveLink": "https://drive.google.com/file/d/1rx5a9XnE6AStnGtXxvjMfVrt3OzSiDgz/view?usp=drivesdk",
+          "driveId": "1rx5a9XnE6AStnGtXxvjMfVrt3OzSiDgz"
+        },
+        {
+          "fileName": "WhatsApp Image 2025-11-14 at 09.09.58.jpeg",
+          "driveLink": "https://drive.google.com/file/d/1u1wM1Qvh_RDiEGW1Y5y3h8AyUeMUxcP_/view?usp=drivesdk",
+          "driveId": "1u1wM1Qvh_RDiEGW1Y5y3h8AyUeMUxcP_"
+        }
+      ],
+      "pollMessageId": null
+    },
+    {
+      "id": "INV-1763718879732-tj0kf8x3k",
+      "phoneNumber": "6282140009711",
+      "tenantName": "PT BOER",
+      "floor": "2",
+      "sentAt": "2025-11-21T09:54:39.732Z",
+      "dueDate": "2025-11-21",
+      "paid": false,
+      "reminder1Sent": false,
+      "reminder2Sent": false,
+      "reminder3Sent": false,
+      "files": [
+        {
+          "name": "WEEKLY REPORT ENGINEERING 10.docx",
+          "type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        },
+        {
+          "name": "WEEKLY REPORT ENGINEERING 3.docx",
+          "type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        }
+      ],
+      "driveFiles": [
+        {
+          "fileName": "WEEKLY REPORT ENGINEERING 10.docx",
+          "driveLink": "https://docs.google.com/document/d/1l3wj7eBblONskEPgCuWQhnavMb6mVdMJ/edit?usp=drivesdk&ouid=105998337497225640524&rtpof=true&sd=true",
+          "driveId": "1l3wj7eBblONskEPgCuWQhnavMb6mVdMJ"
+        },
+        {
+          "fileName": "WEEKLY REPORT ENGINEERING 3.docx",
+          "driveLink": "https://docs.google.com/document/d/1jmF56Vo0x5MrBqnS1R4iXkx6zGy4YQt1/edit?usp=drivesdk&ouid=105998337497225640524&rtpof=true&sd=true",
+          "driveId": "1jmF56Vo0x5MrBqnS1R4iXkx6zGy4YQt1"
+        }
+      ],
+      "pollMessageId": null
+    },
+    {
+      "id": "INV-1763719118274-d4p9idzlh",
+      "phoneNumber": "6282140009711",
+      "tenantName": "PT BOER",
+      "floor": "2",
+      "sentAt": "2025-11-21T09:58:38.274Z",
+      "dueDate": "2025-11-21",
+      "paid": false,
+      "reminder1Sent": false,
+      "reminder2Sent": false,
+      "reminder3Sent": false,
+      "files": [
+        {
+          "name": "WhatsApp Image 2025-11-15 at 14.21.46.jpeg",
+          "type": "image/jpeg"
+        }
+      ],
+      "driveFiles": [
+        {
+          "fileName": "WhatsApp Image 2025-11-15 at 14.21.46.jpeg",
+          "driveLink": "https://drive.google.com/file/d/1qGGqls5Ovb8cfFMhWmEylwDdZjBcstUx/view?usp=drivesdk",
+          "driveId": "1qGGqls5Ovb8cfFMhWmEylwDdZjBcstUx"
+        }
+      ],
+      "pollMessageId": null
+    },
+    {
+      "id": "INV-1763719211686-ypt88suam",
+      "phoneNumber": "6281282594336",
+      "tenantName": "PT. Tobada Karya Sejati",
+      "floor": "15",
+      "sentAt": "2025-11-21T10:00:11.686Z",
+      "dueDate": "2025-11-24",
+      "paid": true,
+      "reminder1Sent": false,
+      "reminder2Sent": false,
+      "reminder3Sent": false,
+      "files": [
+        {
+          "name": "invoice deposit.jpg",
+          "type": "image/jpeg"
+        },
+        {
+          "name": "Invoice sewa dan service charge.jpg",
+          "type": "image/jpeg"
+        }
+      ],
+      "driveFiles": [
+        {
+          "fileName": "invoice deposit.jpg",
+          "driveLink": "https://drive.google.com/file/d/1n44RtaiHsXN7qe5Lt8hUtHZDrFp79bIq/view?usp=drivesdk",
+          "driveId": "1n44RtaiHsXN7qe5Lt8hUtHZDrFp79bIq"
+        },
+        {
+          "fileName": "Invoice sewa dan service charge.jpg",
+          "driveLink": "https://drive.google.com/file/d/1o16lixEVFPEPkcVh380cBTFvJeiZMRqq/view?usp=drivesdk",
+          "driveId": "1o16lixEVFPEPkcVh380cBTFvJeiZMRqq"
+        }
+      ],
+      "pollMessageId": null,
+      "paidAt": "2025-11-21T11:28:56.285Z"
+    },
+    {
+      "id": "INV-1763719704732-giazpdj1v",
+      "phoneNumber": "6282140009711",
+      "tenantName": "PT BOER",
+      "floor": "2",
+      "sentAt": "2025-11-21T10:08:24.732Z",
+      "dueDate": "2025-11-21",
+      "paid": false,
+      "reminder1Sent": false,
+      "reminder2Sent": false,
+      "reminder3Sent": false,
+      "files": [
+        {
+          "name": "invoice deposit.jpg",
+          "type": "image/jpeg"
+        },
+        {
+          "name": "Invoice sewa dan service charge.jpg",
+          "type": "image/jpeg"
+        }
+      ],
+      "driveFiles": [
+        {
+          "fileName": "invoice deposit.jpg",
+          "driveLink": "https://drive.google.com/file/d/1ynYWDMkSAtx14iCWrjgtyM84Bb92j-_g/view?usp=drivesdk",
+          "driveId": "1ynYWDMkSAtx14iCWrjgtyM84Bb92j-_g"
+        },
+        {
+          "fileName": "Invoice sewa dan service charge.jpg",
+          "driveLink": "https://drive.google.com/file/d/17DIvTyUJaIKgfN1RMHad3uOitRsxo8o1/view?usp=drivesdk",
+          "driveId": "17DIvTyUJaIKgfN1RMHad3uOitRsxo8o1"
+        }
+      ],
+      "pollMessageId": null
+    }
+  ]
+}

@@ -55,3 +55,8 @@ dist/
 
 # Session and sensitive data
 session/
+
+# Google Drive credentials
+credentials/
+credentials/**/*
+!credentials/.gitkeep

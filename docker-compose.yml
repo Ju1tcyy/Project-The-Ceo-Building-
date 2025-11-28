@@ -7,12 +7,18 @@ services:
     restart: unless-stopped
     ports:
       - "3000:3000"
+    env_file:
+      - .env
     environment:
       - NODE_ENV=production
       - PORT=3000
       # Add your environment variables here
       # - BOTNUMBER=628xxxxxxxxx
       # - WEBHOOKS=https://your-webhook-url.com/webhook
+      # Google Drive (optional, or use env_file)
+      # - GOOGLE_DRIVE_CREDENTIALS_PATH=/app/credentials/google-drive-credentials.json
+      # - GOOGLE_DRIVE_FOLDER_ID=your_folder_id
+      # - GOOGLE_IMPERSONATE_EMAIL=user@your-domain.com
     volumes:
       # Persist session data
       - ./session:/app/session
@@ -20,6 +26,8 @@ services:
       - ./data:/app/data
       # Optional: persist logs
       - ./logs:/app/logs
+      # Mount credentials for Google Drive
+      - ./credentials:/app/credentials:ro
     networks:
       - wazium-network
     healthcheck:

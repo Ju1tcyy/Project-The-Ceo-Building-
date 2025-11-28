@@ -31,6 +31,16 @@ BOTNUMBER=628xxxxxxxxx
 NODE_ENV=production
 PORT=3000
 WEBHOOKS=https://your-webhook-url.com/webhook
+
+# OAuth 2.0 (Google)
+SESSION_SECRET=your_secure_random_string_here
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+OAUTH_CALLBACK_URL=http://localhost:3000/auth/google/callback
+
+# Access Restriction (Optional)
+ALLOWED_EMAILS=admin@sekolah.ac.id,user@gmail.com
+ALLOWED_GOOGLE_DOMAINS=sekolah.ac.id,company.com
 ```
 
 ### 3. Build and Run with Docker Compose
@@ -95,6 +105,12 @@ The following directories are mounted as volumes to persist data:
 | `PORT` | Port for the web server | No | 3000 |
 | `NODE_ENV` | Environment mode | No | production |
 | `WEBHOOKS` | Comma-separated webhook URLs | No | - |
+| `SESSION_SECRET` | Secret untuk session encryption | Yes (untuk OAuth) | - |
+| `GOOGLE_CLIENT_ID` | Google OAuth Client ID | Yes (untuk OAuth) | - |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth Client Secret | Yes (untuk OAuth) | - |
+| `OAUTH_CALLBACK_URL` | OAuth callback URL | Yes (untuk OAuth) | - |
+| `ALLOWED_EMAILS` | Comma-separated allowed emails | No | - |
+| `ALLOWED_GOOGLE_DOMAINS` | Comma-separated allowed domains | No | - |
 
 ## API Endpoints
 
@@ -145,14 +161,121 @@ chmod -R 755 ./session ./data
 
 ## Production Deployment
 
-### Using Docker Compose (Recommended)
+### Opsi Hosting
+
+#### 1. **VPS (Virtual Private Server)** - Recommended untuk WhatsApp Bot
+
+**Platform populer:**
+- **DigitalOcean** (Starting $6/bulan)
+- **Linode** (Starting $5/bulan)
+- **Vultr** (Starting $6/bulan)
+- **Hetzner** (Starting €4/bulan)
+- **AWS EC2** / **Google Cloud Compute** / **Azure VM**
+
+**Setup di VPS:**
+
+```bash
+# 1. SSH ke server
+ssh root@your-server-ip
+
+# 2. Install Docker & Docker Compose
+curl -fsSL https://get.docker.com -o get-docker.sh
+sh get-docker.sh
+apt-get install docker-compose -y
+
+# 3. Clone repository
+git clone <your-repo-url> /opt/wazium-bot
+cd /opt/wazium-bot
+
+# 4. Setup environment
+cp env.example .env
+nano .env  # Edit dengan konfigurasi production
+
+# 5. Update OAuth callback URL untuk production
+# OAUTH_CALLBACK_URL=https://yourdomain.com/auth/google/callback
+
+# 6. Build dan jalankan
+docker-compose up -d
+
+# 7. Setup reverse proxy (nginx)
+```
+
+#### 2. **Railway** (Easy Deployment)
+
+1. Buat akun di [railway.app](https://railway.app)
+2. Connect GitHub repository
+3. Add environment variables di Railway dashboard
+4. Deploy otomatis
+
+**Railway environment variables:**
+```
+BOTNUMBER=628xxxxxxxxx
+GOOGLE_CLIENT_ID=...
+GOOGLE_CLIENT_SECRET=...
+OAUTH_CALLBACK_URL=https://your-app.railway.app/auth/google/callback
+SESSION_SECRET=...
+```
+
+#### 3. **Render** (Free tier available)
+
+1. Buat akun di [render.com](https://render.com)
+2. Connect GitHub repository
+3. Pilih "Web Service"
+4. Set environment variables
+5. Deploy
+
+#### 4. **Fly.io** (Global edge deployment)
+
+```bash
+# Install flyctl
+curl -L https://fly.io/install.sh | sh
+
+# Login
+fly auth login
+
+# Launch app
+fly launch
+
+# Set secrets
+fly secrets set GOOGLE_CLIENT_ID=...
+fly secrets set GOOGLE_CLIENT_SECRET=...
+```
+
+#### 5. **Heroku** (Paid, but easy)
+
+```bash
+# Install Heroku CLI
+# Login dan create app
+heroku login
+heroku create wazium-bot
+
+# Set environment variables
+heroku config:set BOTNUMBER=628xxxxxxxxx
+heroku config:set GOOGLE_CLIENT_ID=...
+heroku config:set GOOGLE_CLIENT_SECRET=...
+heroku config:set OAUTH_CALLBACK_URL=https://wazium-bot.herokuapp.com/auth/google/callback
+
+# Deploy
+git push heroku main
+```
+
+### Setup dengan Docker Compose (Recommended untuk VPS)
 
 1. **Set up reverse proxy** (nginx/traefik)
-2. **Configure SSL certificates**
+2. **Configure SSL certificates** (Let's Encrypt)
 3. **Set up monitoring** (optional)
 4. **Configure log rotation**
 
-### Example nginx configuration:
+### Setup Nginx Reverse Proxy dengan SSL
+
+**Install Nginx dan Certbot:**
+
+```bash
+apt-get update
+apt-get install nginx certbot python3-certbot-nginx -y
+```
+
+**Nginx configuration (`/etc/nginx/sites-available/wazium-bot`):**
 
 ```nginx
 server {
@@ -165,8 +288,38 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
+        
+        # WebSocket support (if needed)
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
     }
 }
+```
+
+**Enable site dan setup SSL:**
+
+```bash
+# Enable site
+ln -s /etc/nginx/sites-available/wazium-bot /etc/nginx/sites-enabled/
+nginx -t
+systemctl reload nginx
+
+# Setup SSL dengan Let's Encrypt
+certbot --nginx -d your-domain.com
+
+# Auto-renewal (sudah otomatis, tapi bisa test)
+certbot renew --dry-run
+```
+
+**Update OAuth Callback URL:**
+
+Di Google Cloud Console, update Authorized redirect URIs:
+- `https://your-domain.com/auth/google/callback`
+
+Di `.env` file:
+```env
+OAUTH_CALLBACK_URL=https://your-domain.com/auth/google/callback
 ```
 
 ## Monitoring

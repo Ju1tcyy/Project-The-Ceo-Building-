@@ -43,9 +43,6 @@ const useMobile = process.argv.includes("--mobile")
 const botNumber = process.env.BOTNUMBER || null;
 const webhooks = process.env.WEBHOOKS ? process.env.WEBHOOKS.split(',').map(x => x.trim()).filter(Boolean) : [];
 
-const rl = readline.createInterface({ input: process.stdin, output: process.stdout })
-const question = (text) => new Promise((resolve) => rl.question(text, resolve))
-
 async function startWaziumBot() {
     let { version, isLatest } = await fetchLatestBaileysVersion()
     const { state, saveCreds } = await useMultiFileAuthState(`./session`)
@@ -98,6 +95,9 @@ async function startWaziumBot() {
 
     if (pairingCode && !WaziumBot.authState.creds.registered) {
         if (useMobile) throw new Error('Cannot use pairing code with mobile api')
+        const rl = readline.createInterface({ input: process.stdin, output: process.stdout })
+        const question = (text) => new Promise((resolve) => rl.question(text, resolve))
+
         let phoneNumber = botNumber;
         if (!!phoneNumber) {
             phoneNumber = phoneNumber.replace(/[^0-9]/g, '')
@@ -118,20 +118,18 @@ async function startWaziumBot() {
             phoneNumber = phoneNumber.replace(/[^0-9]/g, '')
 
             // Ask again when entering the wrong number
-            if (!Object.keys(PHONENUMBER_MCC).some(v => phoneNumber.startsWith(v))) {
+            while (!Object.keys(PHONENUMBER_MCC).some(v => phoneNumber.startsWith(v))) {
                 console.log(chalk.bgBlack(chalk.redBright("Start with country code of your WhatsApp Number, Example : +916909137213")))
 
-                phoneNumber = await question(chalk.bgBlack(chalk.greenBright(`Please type your WhatsApp number 😍\nFor example: +916909137213 : `)))
+                phoneNumber = await question(chalk.greenBright(`Please re-enter your WhatsApp number (e.g., +916909137213): `))
                 phoneNumber = phoneNumber.replace(/[^0-9]/g, '')
-                rl.close()
             }
         }
 
-        setTimeout(async () => {
-            let code = await WaziumBot.requestPairingCode(phoneNumber)
-            code = code?.match(/.{1,4}/g)?.join("-") || code
-            console.log(chalk.black(chalk.bgGreen(`Your Pairing Code : `)), chalk.black(chalk.white(code)))
-        }, 3000)
+        let code = await WaziumBot.requestPairingCode(phoneNumber)
+        code = code?.match(/.{1,4}/g)?.join("-") || code
+        console.log(chalk.black(chalk.bgGreen(`Your Pairing Code : `)), chalk.black(chalk.white(code)))
+        rl.close()
     }
 
     WaziumBot.ev.on('connection.update', async (update) => {
@@ -145,37 +143,35 @@ async function startWaziumBot() {
                 if (isShuttingDown) {
                     console.log(color(" ✅ Intentional shutdown, not restarting WaziumBot.", 'green'));
                     console.log(color(` ======================================================>`, 'cyan'));
-                    process.exit(0); // Exit the child process gracefully
+                    return 'shutdown'; // Signal to exit the loop
                 } else if (reason === DisconnectReason.badSession) {
                     console.log(color(` ❌ Bad Session File, Please Delete Session and Scan Again`, 'red'));
                     console.log(color(` ======================================================>`, 'cyan'));
-                    startWaziumBot();
                 } else if (reason === DisconnectReason.connectionClosed) {
                     console.log(color(" ℹ️ Connection closed, reconnecting....", 'cyan'));
                     console.log(color(` ======================================================>`, 'cyan'));
-                    startWaziumBot();
                 } else if (reason === DisconnectReason.connectionLost) {
                     console.log(color(" ⚠️ Connection Lost from Server, reconnecting...", 'yellow'));
                     console.log(color(` ======================================================>`, 'cyan'));
-                    startWaziumBot();
                 } else if (reason === DisconnectReason.connectionReplaced) {
                     console.log(color(" ⚠️ Connection Replaced, Another New Session Opened, Please Close Current Session First", 'yellow'));
                     console.log(color(` ======================================================>`, 'cyan'));
-                    startWaziumBot();
+                    return 'shutdown'; // Another session took over, so we stop.
                 } else if (reason === DisconnectReason.loggedOut) {
                     console.log(color(` ❌ Device Logged Out, Please Delete Session and Scan Again.`, 'red'));
                     console.log(color(` ======================================================>`, 'cyan'));
-                    startWaziumBot();
+                    // Potentially delete session files here before restarting
                 } else if (reason === DisconnectReason.restartRequired) {
                     console.log(color(" 🔄 Restart Required, Restarting...", 'cyan'));
                     console.log(color(` ======================================================>`, 'cyan'));
-                    startWaziumBot();
                 } else if (reason === DisconnectReason.timedOut) {
                     console.log(color(" ⏳ Connection TimedOut, Reconnecting...", 'yellow'));
                     console.log(color(` ======================================================>`, 'cyan'));
-                    startWaziumBot();
-                } else WaziumBot.end(color(` ❌ Unknown DisconnectReason: ${reason}|${connection}`, 'red'));
+                } else {
+                    WaziumBot.end(color(` ❌ Unknown DisconnectReason: ${reason}|${connection}`, 'red'));
+                }
                 console.log(color(` ======================================================>`, 'cyan'));
+                return 'reconnect'; // Signal to reconnect
             }
 
             if (update.connection == "connecting" || update.receivedPendingNotifications == "false") {
@@ -208,11 +204,88 @@ async function startWaziumBot() {
             }
         } catch (err) {
             console.log('Error in Connection.update ' + err)
-            startWaziumBot()
+            return 'reconnect'; // Signal to reconnect on error
         }
     })
     WaziumBot.ev.on('creds.update', saveCreds)
     WaziumBot.ev.on("messages.upsert", () => { })
+    
+    // Handle poll updates to automatically update invoice status
+    WaziumBot.ev.on('messages.update', async (updates) => {
+        try {
+            if (!Array.isArray(updates)) {
+                updates = [updates];
+            }
+            
+            for (const update of updates) {
+                // Log untuk debug
+                if (update.update) {
+                    console.log('📊 Poll update received:', JSON.stringify(update.update, null, 2));
+                }
+                
+                if (update.update && update.update.pollUpdates) {
+                    for (const pollUpdate of update.update.pollUpdates) {
+                        console.log('📊 Processing poll update:', JSON.stringify(pollUpdate, null, 2));
+                        
+                        if (pollUpdate.pollUpdateMessage) {
+                            const pollCreationKey = pollUpdate.pollUpdateMessage.pollCreationMessageKey;
+                            if (pollCreationKey) {
+                                const pollMessageId = pollCreationKey.id;
+                                const pollVote = pollUpdate.pollUpdateMessage.vote;
+                                
+                                console.log(`🔍 Poll Message ID: ${pollMessageId}`);
+                                console.log(`🔍 Poll Vote:`, JSON.stringify(pollVote, null, 2));
+                                
+                                if (pollVote && pollVote.selectedOptions && pollVote.selectedOptions.length > 0) {
+                                    // Find invoice by poll message ID
+                                    const invoicesData = reminderService.loadInvoices();
+                                    console.log(`🔍 Searching for invoice with pollMessageId: ${pollMessageId}`);
+                                    console.log(`🔍 Available invoices:`, invoicesData.invoices.map(inv => ({ id: inv.id, pollMessageId: inv.pollMessageId })));
+                                    
+                                    const invoice = invoicesData.invoices.find(inv => inv.pollMessageId === pollMessageId);
+                                    
+                                    if (invoice) {
+                                        // Get the selected option index (0 = SUDAH BAYAR, 1 = BELUM BAYAR)
+                                        const selectedOptionIndex = pollVote.selectedOptions[0];
+                                        
+                                        console.log(`✅ Found invoice ${invoice.id}, selected option: ${selectedOptionIndex}`);
+                                        
+                                        if (selectedOptionIndex === 0 && !invoice.paid) {
+                                            // SUDAH BAYAR selected
+                                            invoice.paid = true;
+                                            invoice.paidAt = new Date().toISOString();
+                                            // Reset reminder flags untuk memastikan reminder berhenti
+                                            invoice.reminder1Sent = false;
+                                            invoice.reminder2Sent = false;
+                                            invoice.reminder3Sent = false;
+                                            delete invoice.reminder1SentAt;
+                                            delete invoice.reminder2SentAt;
+                                            delete invoice.reminder3SentAt;
+                                            reminderService.saveInvoices(invoicesData);
+                                            console.log(`✅ Invoice ${invoice.id} marked as paid via poll vote. Reminder stopped.`);
+                                        } else if (selectedOptionIndex === 1 && invoice.paid) {
+                                            // BELUM BAYAR selected
+                                            invoice.paid = false;
+                                            delete invoice.paidAt;
+                                            reminderService.saveInvoices(invoicesData);
+                                            console.log(`✅ Invoice ${invoice.id} marked as unpaid via poll vote`);
+                                        } else {
+                                            console.log(`ℹ️ Invoice ${invoice.id} status unchanged (already ${invoice.paid ? 'paid' : 'unpaid'})`);
+                                        }
+                                    } else {
+                                        console.log(`⚠️ No invoice found with pollMessageId: ${pollMessageId}`);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('❌ Error handling poll update:', error);
+            console.error('Error stack:', error.stack);
+        }
+    })
 
     WaziumBot.ev.on('messages.upsert', async chatUpdate => {
         try {
@@ -223,6 +296,50 @@ async function startWaziumBot() {
             if (!WaziumBot.public && !mek.key.fromMe && chatUpdate.type === 'notify') return
             if (mek.key.id.startsWith('Xeon') && mek.key.id.length === 16) return
             if (mek.key.id.startsWith('BAE5')) return
+            
+            // Check if this is a poll vote message
+            if (mek.message && mek.message.pollUpdateMessage) {
+                try {
+                    const pollUpdate = mek.message.pollUpdateMessage;
+                    const pollCreationKey = pollUpdate.pollCreationMessageKey;
+                    
+                    if (pollCreationKey) {
+                        const pollMessageId = pollCreationKey.id;
+                        const pollVote = pollUpdate.vote;
+                        
+                        console.log(`📊 Poll vote detected in messages.upsert`);
+                        console.log(`🔍 Poll Message ID: ${pollMessageId}`);
+                        console.log(`🔍 Poll Vote:`, JSON.stringify(pollVote, null, 2));
+                        
+                        if (pollVote && pollVote.selectedOptions && pollVote.selectedOptions.length > 0) {
+                            const invoicesData = reminderService.loadInvoices();
+                            const invoice = invoicesData.invoices.find(inv => inv.pollMessageId === pollMessageId);
+                            
+                            if (invoice) {
+                                const selectedOptionIndex = pollVote.selectedOptions[0];
+                                console.log(`✅ Found invoice ${invoice.id}, selected option: ${selectedOptionIndex}`);
+                                
+                                if (selectedOptionIndex === 0 && !invoice.paid) {
+                                    invoice.paid = true;
+                                    invoice.paidAt = new Date().toISOString();
+                                    reminderService.saveInvoices(invoicesData);
+                                    console.log(`✅ Invoice ${invoice.id} marked as paid via poll vote (from messages.upsert)`);
+                                } else if (selectedOptionIndex === 1 && invoice.paid) {
+                                    invoice.paid = false;
+                                    delete invoice.paidAt;
+                                    reminderService.saveInvoices(invoicesData);
+                                    console.log(`✅ Invoice ${invoice.id} marked as unpaid via poll vote (from messages.upsert)`);
+                                }
+                            } else {
+                                console.log(`⚠️ No invoice found with pollMessageId: ${pollMessageId}`);
+                            }
+                        }
+                    }
+                } catch (pollError) {
+                    console.error('Error handling poll vote in messages.upsert:', pollError);
+                }
+            }
+            
             m = smsg(WaziumBot, mek, store)
             require("../lib/handler.js")(WaziumBot, m, chatUpdate, store)
             if (webhooks.length > 0) {
@@ -294,6 +411,11 @@ const bodyParser = require('body-parser');
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');
 const app = express();
+const session = require('express-session');
+const passport = require('passport');
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
+const reminderService = require('./reminder');
+const googleDriveService = require('./googleDrive');
 
 // Enable CORS for all routes
 app.use((req, res, next) => {
@@ -310,6 +432,63 @@ app.use((req, res, next) => {
 
 app.use(bodyParser.json({ limit: '50mb' })); // Increase limit for file uploads
 app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
+
+// Session and Passport (OAuth 2.0)
+const sessionSecret = process.env.SESSION_SECRET || 'change_this_secret';
+const isOAuthEnabled = !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
+app.use(session({
+    secret: sessionSecret,
+    resave: false,
+    saveUninitialized: false,
+}));
+app.use(passport.initialize());
+app.use(passport.session());
+
+passport.serializeUser((user, done) => {
+    done(null, user);
+});
+passport.deserializeUser((obj, done) => {
+    done(null, obj);
+});
+
+// Helpers: allowlist based on env
+const allowedEmails = (process.env.ALLOWED_EMAILS || '')
+    .split(',')
+    .map(x => x.trim().toLowerCase())
+    .filter(Boolean);
+const allowedDomains = (process.env.ALLOWED_GOOGLE_DOMAINS || '')
+    .split(',')
+    .map(x => x.trim().toLowerCase().replace(/^@/, ''))
+    .filter(Boolean);
+function isEmailAllowed(email) {
+    if (!email) return false;
+    const normalized = email.toLowerCase();
+    if (allowedEmails.length && allowedEmails.includes(normalized)) return true;
+    if (allowedDomains.length) {
+        const domain = normalized.split('@')[1] || '';
+        if (allowedDomains.includes(domain)) return true;
+        return false;
+    }
+    // If no allowlist specified, allow all
+    return allowedEmails.length === 0 && allowedDomains.length === 0;
+}
+
+if (isOAuthEnabled) {
+    passport.use(new GoogleStrategy({
+        clientID: process.env.GOOGLE_CLIENT_ID,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        callbackURL: process.env.OAUTH_CALLBACK_URL || 'http://localhost:3000/auth/google/callback'
+    }, (accessToken, refreshToken, profile, done) => {
+        // Keep minimal user info in session
+        const user = {
+            id: profile.id,
+            displayName: profile.displayName,
+            emails: profile.emails || [],
+            photos: profile.photos || []
+        };
+        return done(null, user);
+    }));
+}
 
 // Definisi manual untuk Swagger spec
 const swaggerDefinition = {
@@ -444,6 +623,53 @@ const swaggerDefinition = {
                 }
             }
         },
+        '/send-messages': {
+            post: {
+                summary: 'Mengirim banyak pesan WhatsApp dalam satu request',
+                description: 'Kirim beberapa media/teks sekaligus ke satu tujuan',
+                requestBody: {
+                    required: true,
+                    content: {
+                        'application/json': {
+                            schema: {
+                                type: 'object',
+                                required: ['to', 'messages'],
+                                properties: {
+                                    to: {
+                                        type: 'string',
+                                        description: 'JID WhatsApp tujuan',
+                                        example: '628123456789@s.whatsapp.net'
+                                    },
+                                    messages: {
+                                        type: 'array',
+                                        description: 'Array payload pesan sesuai format Baileys',
+                                        items: { type: 'object' }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                responses: {
+                    '200': {
+                        description: 'Ringkasan pengiriman batch',
+                        content: {
+                            'application/json': {
+                                schema: {
+                                    type: 'object',
+                                    properties: {
+                                        success: { type: 'boolean', example: true },
+                                        successCount: { type: 'integer', example: 3 },
+                                        failCount: { type: 'integer', example: 1 },
+                                        results: { type: 'array', items: { type: 'object' } }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         '/bot-status': {
             get: {
                 summary: 'Mengecek status bot WhatsApp',
@@ -511,6 +737,55 @@ const swaggerDefinition = {
 
 // Setup Swagger UI dengan definisi manual
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDefinition));
+
+// OAuth routes
+if (isOAuthEnabled) {
+    app.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+    app.get('/auth/google/callback', (req, res, next) => {
+        passport.authenticate('google', async (err, user) => {
+            if (err || !user) return res.redirect('/?login=failed');
+            const primaryEmail = (user.emails && user.emails[0] && user.emails[0].value) || '';
+            if (!isEmailAllowed(primaryEmail)) {
+                // Deny access when not in allowlist
+                return res.status(403).send('Akses ditolak: akun tidak diizinkan.');
+            }
+            req.logIn(user, (loginErr) => {
+                if (loginErr) return next(loginErr);
+                return res.redirect('/');
+            });
+        })(req, res, next);
+    });
+} else {
+    // Helpful responses if OAuth not configured
+    app.get('/auth/google', (req, res) => {
+        res.status(503).json({
+            error: 'OAuth not configured',
+            message: 'Set GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, dan OAUTH_CALLBACK_URL di .env lalu restart server.'
+        });
+    });
+    app.get('/auth/google/callback', (req, res) => {
+        res.status(503).json({
+            error: 'OAuth not configured',
+            message: 'Set variabel .env untuk Google OAuth dan restart server.'
+        });
+    });
+}
+
+app.post('/auth/logout', (req, res) => {
+    req.logout && req.logout(() => {
+        req.session.destroy(() => res.json({ success: true }));
+    });
+    if (!req.logout) {
+        req.session.destroy(() => res.json({ success: true }));
+    }
+});
+
+app.get('/auth/status', (req, res) => {
+    if (req.isAuthenticated && req.isAuthenticated()) {
+        return res.json({ authenticated: true, user: req.user });
+    }
+    return res.json({ authenticated: false });
+});
 
 // Route untuk mengirim pesan
 app.post('/send-message', async (req, res) => {
@@ -602,6 +877,176 @@ app.post('/send-message', async (req, res) => {
             details: err.message
         });
     }
+});
+
+// Route batch untuk mengirim banyak pesan sekaligus
+app.post('/send-messages', async (req, res) => {
+    const { to, messages, invoiceData } = req.body;
+
+    if (!waziumBotInstance) {
+        return res.status(503).json({
+            error: 'Bot belum siap',
+            message: 'WhatsApp bot sedang dalam proses koneksi. Silakan tunggu beberapa saat.'
+        });
+    }
+
+    if (!to || !Array.isArray(messages) || messages.length === 0) {
+        return res.status(400).json({
+            error: 'Parameter "to" dan array "messages" wajib diisi'
+        });
+    }
+
+    if (!to.includes('@s.whatsapp.net') && !to.includes('@g.us')) {
+        return res.status(400).json({
+            error: 'Format nomor WhatsApp tidak valid',
+            message: 'Gunakan format: 628123456789@s.whatsapp.net atau groupid@g.us'
+        });
+    }
+
+    const results = [];
+    let successCount = 0;
+    let failCount = 0;
+    const uploadedFiles = []; // Store Google Drive links
+
+    for (const message of messages) {
+        try {
+            let processedMessage = { ...message };
+            let fileBuffer = null;
+            let fileName = null;
+            let mimeType = null;
+            
+            // Get file info from invoiceData if available
+            const fileIndex = results.length; // Use results length as index
+            const fileInfo = invoiceData && invoiceData.files && invoiceData.files[fileIndex] 
+                ? invoiceData.files[fileIndex] 
+                : null;
+            
+            // Extract file data and upload to Google Drive
+            if (processedMessage.image && processedMessage.image.url && processedMessage.image.url.startsWith('data:')) {
+                const base64Data = processedMessage.image.url;
+                const base64String = base64Data.split(',')[1];
+                fileBuffer = Buffer.from(base64String, 'base64');
+                fileName = fileInfo?.name || 
+                    (processedMessage.image.caption ? processedMessage.image.caption.match(/📎 File: (.+)/)?.[1] : null) ||
+                    `image_${Date.now()}.jpg`;
+                mimeType = fileInfo?.type || processedMessage.image.url.match(/data:([^;]+)/)?.[1] || 'image/jpeg';
+                processedMessage.image = fileBuffer;
+                delete processedMessage.image.url;
+            } else if (processedMessage.video && processedMessage.video.url && processedMessage.video.url.startsWith('data:')) {
+                const base64Data = processedMessage.video.url;
+                const base64String = base64Data.split(',')[1];
+                fileBuffer = Buffer.from(base64String, 'base64');
+                fileName = fileInfo?.name || 
+                    (processedMessage.video.caption ? processedMessage.video.caption.match(/📎 File: (.+)/)?.[1] : null) ||
+                    `video_${Date.now()}.mp4`;
+                mimeType = fileInfo?.type || processedMessage.video.url.match(/data:([^;]+)/)?.[1] || 'video/mp4';
+                processedMessage.video = fileBuffer;
+                delete processedMessage.video.url;
+            } else if (processedMessage.audio && processedMessage.audio.url && processedMessage.audio.url.startsWith('data:')) {
+                const base64Data = processedMessage.audio.url;
+                const base64String = base64Data.split(',')[1];
+                fileBuffer = Buffer.from(base64String, 'base64');
+                fileName = fileInfo?.name || `audio_${Date.now()}.mp3`;
+                mimeType = fileInfo?.type || processedMessage.audio.mimetype || processedMessage.audio.url.match(/data:([^;]+)/)?.[1] || 'audio/mpeg';
+                processedMessage.audio = fileBuffer;
+                delete processedMessage.audio.url;
+            } else if (processedMessage.document && processedMessage.document.url && processedMessage.document.url.startsWith('data:')) {
+                const base64Data = processedMessage.document.url;
+                const base64String = base64Data.split(',')[1];
+                fileBuffer = Buffer.from(base64String, 'base64');
+                fileName = fileInfo?.name || 
+                    processedMessage.document.fileName || 
+                    (processedMessage.document.caption ? processedMessage.document.caption.match(/📎 File: (.+)/)?.[1] : null) ||
+                    `document_${Date.now()}.pdf`;
+                mimeType = fileInfo?.type || processedMessage.document.mimetype || processedMessage.document.url.match(/data:([^;]+)/)?.[1] || 'application/pdf';
+                processedMessage.document = fileBuffer;
+                delete processedMessage.document.url;
+            }
+
+            // Upload to Google Drive if file exists
+            if (fileBuffer && fileName) {
+                try {
+                    const driveResult = await googleDriveService.uploadFileToDrive(fileBuffer, fileName, mimeType, invoiceData.tenantName);
+                    if (driveResult) {
+                        uploadedFiles.push({
+                            fileName: driveResult.fileName,
+                            driveLink: driveResult.webViewLink,
+                            driveId: driveResult.fileId
+                        });
+                        console.log(`✅ File uploaded to Google Drive: ${fileName}`);
+                    }
+                } catch (driveError) {
+                    console.error('⚠️ Error uploading to Google Drive (continuing...):', driveError.message);
+                }
+            }
+
+            const sendResult = await waziumBotInstance.sendMessage(to, processedMessage);
+            results.push({ ok: true, id: sendResult?.key?.id || null });
+            successCount++;
+        } catch (e) {
+            results.push({ ok: false, error: e.message });
+            failCount++;
+        }
+    }
+
+    // Record invoice if invoiceData is provided and at least one message was sent successfully
+    let invoiceId = null;
+    if (invoiceData && successCount > 0 && to.includes('@s.whatsapp.net')) {
+        try {
+            const invoicesData = reminderService.loadInvoices();
+            const phoneNumber = to.replace('@s.whatsapp.net', '');
+            
+            invoiceId = `INV-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+            const invoice = {
+                id: invoiceId,
+                phoneNumber: phoneNumber,
+                tenantName: invoiceData.tenantName || '',
+                floor: invoiceData.floor || '',
+                sentAt: new Date().toISOString(),
+                dueDate: invoiceData.dueDate || null,
+                paid: false,
+                reminder1Sent: false,
+                reminder2Sent: false,
+                reminder3Sent: false,
+                files: invoiceData.files || [],
+                driveFiles: uploadedFiles || [], // Store Google Drive links
+                pollMessageId: null // Initialize poll message ID
+            };
+            
+            invoicesData.invoices.push(invoice);
+            reminderService.saveInvoices(invoicesData);
+            console.log(`✅ Invoice recorded: ${invoiceId} for ${phoneNumber}`);
+            
+            // Send poll message after invoice is sent
+            try {
+                const pollName = 'INVOICE';
+                const pollOptions = ['SUDAH BAYAR', 'BELUM BAYAR'];
+                const pollResult = await waziumBotInstance.sendPollMessage(to, pollName, pollOptions);
+                
+                console.log(`📊 Poll result:`, JSON.stringify(pollResult, null, 2));
+                
+                // Update invoice with poll message ID
+                const pollMessageId = pollResult?.key?.id || null;
+                console.log(`📊 Poll Message ID to save: ${pollMessageId}`);
+                
+                const invoiceIndex = invoicesData.invoices.findIndex(inv => inv.id === invoiceId);
+                if (invoiceIndex !== -1) {
+                    invoicesData.invoices[invoiceIndex].pollMessageId = pollMessageId;
+                    reminderService.saveInvoices(invoicesData);
+                    console.log(`✅ Poll message ID saved for invoice ${invoiceId}: ${pollMessageId}`);
+                } else {
+                    console.error(`⚠️ Invoice ${invoiceId} not found when trying to save poll message ID`);
+                }
+            } catch (pollError) {
+                console.error('⚠️ Error sending poll (invoice still recorded):', pollError.message);
+                console.error('Poll error stack:', pollError.stack);
+            }
+        } catch (error) {
+            console.error('Error recording invoice:', error);
+        }
+    }
+
+    return res.json({ success: true, successCount, failCount, results, invoiceId });
 });
 
 // Route untuk mengecek status bot
@@ -737,45 +1182,157 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '../index.html'));
 });
 
+// Route untuk menandai invoice sebagai sudah dibayar
+app.post('/api/invoices/:invoiceId/mark-paid', (req, res) => {
+    try {
+        const { invoiceId } = req.params;
+        const invoicesData = reminderService.loadInvoices();
+        const invoice = invoicesData.invoices.find(inv => inv.id === invoiceId);
+        
+        if (!invoice) {
+            return res.status(404).json({ error: 'Invoice tidak ditemukan' });
+        }
+        
+        invoice.paid = true;
+        invoice.paidAt = new Date().toISOString();
+        
+        // Reset reminder flags untuk memastikan reminder berhenti
+        invoice.reminder1Sent = false;
+        invoice.reminder2Sent = false;
+        invoice.reminder3Sent = false;
+        delete invoice.reminder1SentAt;
+        delete invoice.reminder2SentAt;
+        delete invoice.reminder3SentAt;
+        
+        reminderService.saveInvoices(invoicesData);
+        res.json({ success: true, message: 'Invoice berhasil ditandai sebagai sudah dibayar. Reminder telah dihentikan.' });
+    } catch (error) {
+        console.error('Error marking invoice as paid:', error);
+        res.status(500).json({ error: 'Gagal memperbarui status invoice' });
+    }
+});
+
+// Route untuk toggle status invoice (paid/unpaid)
+app.post('/api/invoices/:invoiceId/toggle-status', (req, res) => {
+    try {
+        const { invoiceId } = req.params;
+        const { paid } = req.body; // Get desired status from request body
+        const invoicesData = reminderService.loadInvoices();
+        const invoice = invoicesData.invoices.find(inv => inv.id === invoiceId);
+        
+        if (!invoice) {
+            return res.status(404).json({ error: 'Invoice tidak ditemukan' });
+        }
+        
+        // Set status based on request, or toggle if not provided
+        if (paid !== undefined) {
+            invoice.paid = paid;
+        } else {
+            invoice.paid = !invoice.paid;
+        }
+        
+        if (invoice.paid) {
+            invoice.paidAt = new Date().toISOString();
+            // Reset reminder flags untuk memastikan reminder berhenti
+            invoice.reminder1Sent = false;
+            invoice.reminder2Sent = false;
+            invoice.reminder3Sent = false;
+            delete invoice.reminder1SentAt;
+            delete invoice.reminder2SentAt;
+            delete invoice.reminder3SentAt;
+        } else {
+            delete invoice.paidAt;
+        }
+        
+        reminderService.saveInvoices(invoicesData);
+        res.json({ 
+            success: true, 
+            paid: invoice.paid,
+            message: invoice.paid ? 'Invoice berhasil ditandai sebagai sudah dibayar. Reminder telah dihentikan.' : 'Invoice berhasil ditandai sebagai belum dibayar'
+        });
+    } catch (error) {
+        console.error('Error toggling invoice status:', error);
+        res.status(500).json({ error: 'Gagal memperbarui status invoice' });
+    }
+});
+
+// Route untuk mendapatkan daftar invoice
+app.get('/api/invoices', (req, res) => {
+    try {
+        const invoicesData = reminderService.loadInvoices();
+        res.json(invoicesData);
+    } catch (error) {
+        console.error('Error loading invoices:', error);
+        res.status(500).json({ error: 'Gagal memuat data invoice' });
+    }
+});
+
+async function runBot() {
+    let bot = null;
+    while (true) {
+        try {
+            bot = await startWaziumBot();
+            waziumBotInstance = bot; // Make the instance available globally
+            console.log(color(" ✅ Bot instance started, waiting for connection events...", 'blue'));
+
+            // Wait until the connection is closed
+            const reason = await new Promise((resolve) => {
+                bot.ev.on('connection.update', (update) => {
+                    if (update.connection === 'close') {
+                        // The logic inside startWaziumBot's connection.update will run first
+                        // and decide the reason for closing. We just need to wait for it.
+                        // A small delay ensures the internal handler has returned its signal.
+                        setTimeout(() => resolve('reconnect'), 500);
+                    }
+                });
+            });
+
+            if (reason === 'shutdown') {
+                console.log(color(" 🛑 Bot shutdown initiated. Exiting loop.", 'magenta'));
+                break;
+            }
+
+        } catch (err) {
+            console.error('❌ Fatal error in startWaziumBot, restarting in 10 seconds...', err);
+        }
+        console.log(color(" 🔄 Restarting bot in 10 seconds...", 'yellow'));
+        await delay(10000); // Wait 10 seconds before restarting
+    }
+}
+
 if (require.main === module) {
-    // Jalankan bot dan API
-    console.log('🚀 Memulai WaziumBot...');
+    console.log('🚀 Memulai WaziumBot dan server API...');
 
-    startWaziumBot().then((bot) => {
-        waziumBotInstance = bot;
+    // Start the bot loop
+    runBot();
 
-        const PORT = process.env.PORT || 3000;
-        const server = app.listen(PORT, () => {
-            console.log(` 🌐 API server berjalan di port ${PORT}`);
-            console.log(` 📖 Dokumentasi API: http://localhost:${PORT}/api-docs`);
-            console.log(` ❤️  Health check: http://localhost:${PORT}/health`);
-            console.log(` 📊 Status bot: http://localhost:${PORT}/bot-status`);
-            console.log(color(` ======================================================>`, 'cyan'));
-        });
+    // Initialize Google Drive & Reminder Scheduler
+    googleDriveService.initializeDrive();
+    // Pass a getter for the bot instance so it always has the latest one
+    reminderService.startReminderScheduler(() => waziumBotInstance);
 
-        // Graceful shutdown
-        process.on('SIGTERM', () => {
-            console.log('🛑 Menerima SIGTERM, menghentikan server...');
-            isShuttingDown = true;
-            server.close(() => {
-                console.log('✅ Server berhasil dihentikan');
-                process.exit(0);
-            });
-        });
-
-        process.on('SIGINT', () => {
-            console.log('🛑 Menerima SIGINT, menghentikan server...');
-            isShuttingDown = true;
-            server.close(() => {
-                console.log('✅ Server berhasil dihentikan');
-                process.exit(0);
-            });
-        });
-
-    }).catch((err) => {
-        console.error('❌ Gagal memulai WaziumBot:', err);
-        process.exit(1);
+    const PORT = process.env.PORT || 3000;
+    const server = app.listen(PORT, () => {
+        console.log(` 🌐 API server berjalan di port ${PORT}`);
+        console.log(` 📖 Dokumentasi API: http://localhost:${PORT}/api-docs`);
+        console.log(` ❤️  Health check: http://localhost:${PORT}/health`);
+        console.log(` 📊 Status bot: http://localhost:${PORT}/bot-status`);
+        console.log(color(` ======================================================>`, 'cyan'));
     });
+
+    // Graceful shutdown
+    const shutdown = () => {
+        console.log('🛑 Shutting down server...');
+        isShuttingDown = true;
+        if (waziumBotInstance) waziumBotInstance.end('Server is shutting down');
+        server.close(() => {
+            console.log('✅ Server berhasil dihentikan');
+            process.exit(0);
+        });
+    };
+
+    process.on('SIGTERM', shutdown);
+    process.on('SIGINT', shutdown);
 }
 
 process.on('uncaughtException', function (err) {

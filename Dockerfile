@@ -1,5 +1,5 @@
 # Use Node.js 18 Alpine as base image
-FROM node:18-alpine
+FROM node:20-alpine
 
 # Set working directory
 WORKDIR /app
@@ -22,10 +22,13 @@ RUN apk add --no-cache \
 # Copy package files
 COPY package.json yarn.lock ./
 
-# Install dependencies
-RUN yarn install --frozen-lockfile --production
+# Install all dependencies (including devDependencies for build process)
+RUN yarn install --frozen-lockfile
 
-# Copy application files
+# Prune devDependencies after installation
+RUN yarn install --production
+
+# Copy the rest of the application files
 COPY . .
 
 # Create necessary directories
