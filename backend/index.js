@@ -14,7 +14,7 @@ function start() {
             console.log('Restarting Bot...')
             p.kill()
             start()
-            delete p
+            delete p()
          }
       })
       .on('exit', code => {

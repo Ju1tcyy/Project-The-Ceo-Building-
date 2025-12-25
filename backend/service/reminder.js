@@ -167,11 +167,11 @@ function startReminderScheduler(botInstance) {
     }, 60 * 60 * 1000); // 1 hour in milliseconds
 
     // Also check immediately on startup
-    setTimeout(() => {
-        if (currentBotInstance) {
-            checkAndSendReminders(currentBotInstance);
-        }
-    }, 5000); // Wait 5 seconds after startup
+    // setTimeout(() => {
+    //     if (currentBotInstance) {
+    //         checkAndSendReminders(currentBotInstance);
+    //     }
+    // }, 5000); // Wait 5 seconds after startup
 
     console.log('✅ Reminder scheduler started (checking every hour)');
 }

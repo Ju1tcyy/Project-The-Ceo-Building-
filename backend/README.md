@@ -35,7 +35,7 @@ npm install
 npm start
 ```
 
-Bot akan berjalan di `http://localhost:3000`
+Bot akan berjalan di `http://localhost:3030`
 
 ### 2. Membuka Interface Web
 
@@ -108,14 +108,14 @@ const tenantData = {
 
 ### Bot belum siap
 - Pastikan WaziumBot sudah terhubung ke WhatsApp
-- Cek status di `http://localhost:3000/bot-status`
+- Cek status di `http://localhost:3030/bot-status`
 
 ### Gagal mengirim file
 - Pastikan file tidak terlalu besar (max ~16MB untuk WhatsApp)
 - Cek format file yang didukung
 
 ### Error koneksi
-- Pastikan WaziumBot berjalan di port 3000
+- Pastikan WaziumBot berjalan di port 3030
 - Cek firewall dan network settings
 
 ## Dependencies

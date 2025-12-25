@@ -1,10 +1,11 @@
 require('dotenv').config()
 require('../config.js')
+const path = require('path');
 const {
     proto,
     delay,
     generateWAMessage,
-    areJidsSameUser,
+    areJidsSameUser,    
     getContentType
 } = require('@itsukichan/baileys')
 const makeWASocket = require("@itsukichan/baileys").default
@@ -37,6 +38,8 @@ require('../lib/functions.js')
 nocache('../lib/functions.js', module => console.log(color('[ CHANGE ]', 'green'), color(`'${module}'`, 'green'), 'Updated'))
 require('../commandHandler.js')
 nocache('../commandHandler.js', module => console.log(color('[ CHANGE ]', 'green'), color(`'${module}'`, 'green'), 'Updated'))
+
+const { startReminderScheduler } = require('./reminder')
 
 const pairingCode = true // Set to true to enable pairing code login by default
 const useMobile = process.argv.includes("--mobile")
@@ -200,6 +203,9 @@ async function startWaziumBot() {
                 console.log(color(` ======================================================>`, 'cyan'));
                 console.log(color(` 👀 Ready to receive messages`, 'blue'));
                 console.log(color(` ======================================================>`, 'cyan'));
+
+                // Start reminder scheduler
+                startReminderScheduler(WaziumBot);
 
             }
         } catch (err) {
@@ -477,7 +483,7 @@ if (isOAuthEnabled) {
     passport.use(new GoogleStrategy({
         clientID: process.env.GOOGLE_CLIENT_ID,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        callbackURL: process.env.OAUTH_CALLBACK_URL || 'http://localhost:3000/auth/google/callback'
+        callbackURL: process.env.OAUTH_CALLBACK_URL || 'http://localhost:3030/auth/google/callback'
     }, (accessToken, refreshToken, profile, done) => {
         // Keep minimal user info in session
         const user = {
@@ -1113,11 +1119,11 @@ app.get('/webhooks', (req, res) => {
 });
 
 // Serve static files
-app.use(express.static('.'));
+app.use(express.static(path.join(__dirname, '..')));
 
 // Tenant CRUD API endpoints
 const fs = require('fs');
-const path = require('path');
+// const path = require('path'); // Already required above
 
 const tenantsFilePath = path.join(__dirname, '../data/tenants.json');
 
@@ -1179,8 +1185,11 @@ app.put('/api/tenants', (req, res) => {
 
 // Route untuk halaman utama - serve index.html
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '../index.html'));
+  res.sendFile(
+    path.join(__dirname, '../../frontend/index.html')
+  );
 });
+
 
 // Route untuk menandai invoice sebagai sudah dibayar
 app.post('/api/invoices/:invoiceId/mark-paid', (req, res) => {
@@ -1308,10 +1317,9 @@ if (require.main === module) {
 
     // Initialize Google Drive & Reminder Scheduler
     googleDriveService.initializeDrive();
-    // Pass a getter for the bot instance so it always has the latest one
-    reminderService.startReminderScheduler(() => waziumBotInstance);
+    // Reminder scheduler is started in connection update when bot connects
 
-    const PORT = process.env.PORT || 3000;
+    const PORT = process.env.PORT || 3030
     const server = app.listen(PORT, () => {
         console.log(` 🌐 API server berjalan di port ${PORT}`);
         console.log(` 📖 Dokumentasi API: http://localhost:${PORT}/api-docs`);
@@ -1324,11 +1332,16 @@ if (require.main === module) {
     const shutdown = () => {
         console.log('🛑 Shutting down server...');
         isShuttingDown = true;
-        if (waziumBotInstance) waziumBotInstance.end('Server is shutting down');
-        server.close(() => {
-            console.log('✅ Server berhasil dihentikan');
-            process.exit(0);
-        });
+        try {
+            if (waziumBotInstance) waziumBotInstance.end('Server is shutting down');
+            server.close(() => {
+                console.log('✅ Server berhasil dihentikan');
+                process.exit(0);
+            });
+        } catch (error) {
+            console.error('Error during shutdown:', error);
+            process.exit(1);
+        }
     };
 
     process.on('SIGTERM', shutdown);
@@ -1347,6 +1360,8 @@ process.on('uncaughtException', function (err) {
     if (e.includes("Timed Out")) return
     if (e.includes("Value not found")) return
     console.log('Caught exception: ', err)
+    console.error('Uncaught Exception Stack:', err.stack);
+    process.exit(1); // Exit on uncaught exception
 })
 
 const smsg = (WaziumBot, m, store) => {

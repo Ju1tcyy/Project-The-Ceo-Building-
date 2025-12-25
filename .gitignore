@@ -1,6 +1,6 @@
 # Node modules
 node_modules/
-
+.env
 # Logs
 logs
 *.log
@@ -60,3 +60,9 @@ session/
 credentials/
 credentials/**/*
 !credentials/.gitkeep
+
+# Kredensial sensitif
+google-drive-credentials.json
+
+# environtment variables
+.env.local

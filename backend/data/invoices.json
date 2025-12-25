@@ -8,8 +8,8 @@
       "sentAt": "2025-11-21T02:44:32.100Z",
       "dueDate": "2025-11-23",
       "paid": false,
-      "reminder1Sent": false,
-      "reminder2Sent": false,
+      "reminder1Sent": true,
+      "reminder2Sent": true,
       "reminder3Sent": false,
       "files": [
         {
@@ -24,7 +24,9 @@
           "driveId": "1b3eDPJ_xJj7pZBAmewk0QI2ifGiMb9M8"
         }
       ],
-      "pollMessageId": null
+      "pollMessageId": null,
+      "reminder1SentAt": "2025-12-24T07:48:05.561Z",
+      "reminder2SentAt": "2025-12-24T07:48:37.578Z"
     },
     {
       "id": "INV-1763717540894-zkhs82f0j",
@@ -34,8 +36,8 @@
       "sentAt": "2025-11-21T09:32:20.894Z",
       "dueDate": "2025-11-21",
       "paid": false,
-      "reminder1Sent": false,
-      "reminder2Sent": false,
+      "reminder1Sent": true,
+      "reminder2Sent": true,
       "reminder3Sent": false,
       "files": [
         {
@@ -59,7 +61,9 @@
           "driveId": "1xuFIaAk3oqqgvmjggde152yvFwKBrSmQ"
         }
       ],
-      "pollMessageId": null
+      "pollMessageId": null,
+      "reminder1SentAt": "2025-12-24T07:48:05.561Z",
+      "reminder2SentAt": "2025-12-24T07:48:37.578Z"
     },
     {
       "id": "INV-1763717983275-6k6v4q6xd",
@@ -69,8 +73,8 @@
       "sentAt": "2025-11-21T09:39:43.275Z",
       "dueDate": "2025-11-21",
       "paid": false,
-      "reminder1Sent": false,
-      "reminder2Sent": false,
+      "reminder1Sent": true,
+      "reminder2Sent": true,
       "reminder3Sent": false,
       "files": [
         {
@@ -94,7 +98,9 @@
           "driveId": "1PZSN-9e7dfNLKIB_T8YuwYVNWZ7oE33g"
         }
       ],
-      "pollMessageId": null
+      "pollMessageId": null,
+      "reminder1SentAt": "2025-12-24T07:48:05.561Z",
+      "reminder2SentAt": "2025-12-24T07:48:37.578Z"
     },
     {
       "id": "INV-1763718431482-7f4n6k88o",
@@ -104,8 +110,8 @@
       "sentAt": "2025-11-21T09:47:11.482Z",
       "dueDate": "2025-11-21",
       "paid": false,
-      "reminder1Sent": false,
-      "reminder2Sent": false,
+      "reminder1Sent": true,
+      "reminder2Sent": true,
       "reminder3Sent": false,
       "files": [
         {
@@ -138,7 +144,9 @@
           "driveId": "13aaOwD1fLzpAmFSRESZ_cqlVWcEfeLmJ"
         }
       ],
-      "pollMessageId": null
+      "pollMessageId": null,
+      "reminder1SentAt": "2025-12-24T07:48:05.561Z",
+      "reminder2SentAt": "2025-12-24T07:48:37.578Z"
     },
     {
       "id": "INV-1763718692677-52cqgpg1s",
@@ -148,8 +156,8 @@
       "sentAt": "2025-11-21T09:51:32.677Z",
       "dueDate": "2025-11-21",
       "paid": false,
-      "reminder1Sent": false,
-      "reminder2Sent": false,
+      "reminder1Sent": true,
+      "reminder2Sent": true,
       "reminder3Sent": false,
       "files": [
         {
@@ -182,7 +190,9 @@
           "driveId": "1u1wM1Qvh_RDiEGW1Y5y3h8AyUeMUxcP_"
         }
       ],
-      "pollMessageId": null
+      "pollMessageId": null,
+      "reminder1SentAt": "2025-12-24T07:48:05.561Z",
+      "reminder2SentAt": "2025-12-24T07:48:37.578Z"
     },
     {
       "id": "INV-1763718879732-tj0kf8x3k",
@@ -192,8 +202,8 @@
       "sentAt": "2025-11-21T09:54:39.732Z",
       "dueDate": "2025-11-21",
       "paid": false,
-      "reminder1Sent": false,
-      "reminder2Sent": false,
+      "reminder1Sent": true,
+      "reminder2Sent": true,
       "reminder3Sent": false,
       "files": [
         {
@@ -217,7 +227,9 @@
           "driveId": "1jmF56Vo0x5MrBqnS1R4iXkx6zGy4YQt1"
         }
       ],
-      "pollMessageId": null
+      "pollMessageId": null,
+      "reminder1SentAt": "2025-12-24T07:48:05.561Z",
+      "reminder2SentAt": "2025-12-24T07:48:37.578Z"
     },
     {
       "id": "INV-1763719118274-d4p9idzlh",
@@ -227,8 +239,8 @@
       "sentAt": "2025-11-21T09:58:38.274Z",
       "dueDate": "2025-11-21",
       "paid": false,
-      "reminder1Sent": false,
-      "reminder2Sent": false,
+      "reminder1Sent": true,
+      "reminder2Sent": true,
       "reminder3Sent": false,
       "files": [
         {
@@ -243,7 +255,9 @@
           "driveId": "1qGGqls5Ovb8cfFMhWmEylwDdZjBcstUx"
         }
       ],
-      "pollMessageId": null
+      "pollMessageId": null,
+      "reminder1SentAt": "2025-12-24T07:48:05.561Z",
+      "reminder2SentAt": "2025-12-24T07:48:37.578Z"
     },
     {
       "id": "INV-1763719211686-ypt88suam",
@@ -289,8 +303,8 @@
       "sentAt": "2025-11-21T10:08:24.732Z",
       "dueDate": "2025-11-21",
       "paid": false,
-      "reminder1Sent": false,
-      "reminder2Sent": false,
+      "reminder1Sent": true,
+      "reminder2Sent": true,
       "reminder3Sent": false,
       "files": [
         {
@@ -314,7 +328,9 @@
           "driveId": "17DIvTyUJaIKgfN1RMHad3uOitRsxo8o1"
         }
       ],
-      "pollMessageId": null
+      "pollMessageId": null,
+      "reminder1SentAt": "2025-12-24T07:48:05.561Z",
+      "reminder2SentAt": "2025-12-24T07:48:37.578Z"
     }
   ]
 }

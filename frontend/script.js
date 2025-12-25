@@ -161,7 +161,7 @@ document.getElementById('tenantForm').addEventListener('submit', async function(
             files: files.map(f => ({ name: f.name, type: f.type }))
         };
 
-        const response = await fetch('http://localhost:3000/send-messages', {
+        const response = await fetch('http://localhost:3030/send-messages', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ to: whatsappJid, messages, invoiceData })
@@ -345,7 +345,7 @@ function showStatus(message, type) {
     setTimeout(() => {
         statusElement.textContent = '';
         statusElement.className = '';
-    }, 3000);
+    }, 3030);
 }
 
 // Tab functionality is now defined above in invoice management section
@@ -857,9 +857,20 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
 
     if (googleBtn) {
-        googleBtn.addEventListener('click', function() {
-            window.location.href = '/auth/google';
-        });
+       googleBtn.addEventListener('click', function () {
+    const clientId = '110635673191-vtopt1540qjdbc1i2e23re7ip39of52i.apps.googleusercontent.com';
+    const redirectUri = 'http://localhost:3030/auth/google/callback';
+
+    const url =
+      'https://accounts.google.com/o/oauth2/v2/auth' +
+      '?client_id=' + clientId +
+      '&redirect_uri=' + encodeURIComponent(redirectUri) +
+      '&response_type=code' +
+      '&scope=' + encodeURIComponent('openid email profile');
+
+    window.location.href = url;
+});
+
     }
 
     if (logoutBtn) {
