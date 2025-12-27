@@ -1,7 +1,9 @@
+const path = require('path')
 const {
+
    spawn
 } = require('child_process')
-const path = require('path')
+
 
 function start() {
    let args = [path.join(__dirname, 'service/wazium.js'), ...process.argv.slice(2)]

@@ -1,4 +1,10 @@
+const { log } = require("console");
+
 // Simple client-side auth
+console.log('Script loaded');
+
+window.location.href = '/auth/google';
+
 async function isAuthenticated() {
     try {
         const res = await fetch('/auth/status', { credentials: 'same-origin' });
@@ -67,6 +73,34 @@ document.getElementById("lantai").addEventListener("change", function () {
     const selectedLantai = this.value;
     updateTenantDropdown(selectedLantai);
 });
+
+document.addEventListener('DOMContentLoaded', async () => {
+    const lantaiSelect = document.getElementById('lantai');
+    if (lantai) {
+        lantai.addEventListener('change', function() {
+            updateTenantDropdown(this.value);
+        } );
+    }
+});
+
+const tenantForm = document.getElementById('tenantForm');
+if (tenantForm) {
+    tenantForm.addEventListener('submit', async function(event) {
+});
+
+const googleBtn = document.getElementById('googleLoginBtn');
+if (googleBtn) {
+    googleBtn.addEventListener('click', function() {
+    });
+
+    if (await isAuthenticated()) {
+    showApp();
+    await loadTenantData();
+    updateTenantDisplay();
+  } else {
+    showLogin();
+  }
+};
 
 // Handle form submission
 document.getElementById('tenantForm').addEventListener('submit', async function(event) {
@@ -893,3 +927,4 @@ document.addEventListener('DOMContentLoaded', async function() {
         showLogin();
     }
 });
+};
